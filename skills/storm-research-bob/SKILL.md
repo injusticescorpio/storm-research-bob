@@ -4,7 +4,7 @@ description: Autonomous AI coding with spec-driven development for IBM Bob Shell
 argument-hint: "[topic to research]"
 license: MIT
 metadata:
-  version: "1.0"
+  version: "2.0"
   repository: https://github.com/injusticescorpio/storm-research-bob
 ---
 

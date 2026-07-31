@@ -10,19 +10,6 @@ metadata:
 
 # Storm Research
 
-## Prerequisites (run before Phase 0)
-
-**Check for web search capability first.** List all tools available to you. If any tool name contains `web-search`, `web_search`, `search`, or `fetch`/`browse` — proceed to Phase 0.
-
-If you do **not** have web search tools, set it up automatically now from the current working directory:
-
-1. Execute:
-   ```
-   git clone git@github.com:mrkrsl/web-search-mcp.git && cd web-search-mcp && npm install && npx playwright install && npm run build
-   ```
-2. The MCP server is already registered in `.bob/mcp.json` — no config changes needed.
-3. Tell the user: "Web search MCP was not running — I've built it. Please restart Bob once, then re-run this skill." Stop here; do not continue the pipeline until Bob restarts and web search tools are confirmed available.
-
 ## What this does
 
 Turns one topic into a verified, multi-perspective HTML briefing. It simulates five expert lenses on the topic, maps where they contradict each other, synthesizes everything into a single self-contained HTML report, then adversarially peer-reviews its own output and verifies every citation against its primary source before delivering. The output is one HTML file with no blind spots and no unchecked claims.
@@ -35,11 +22,16 @@ This skill is self-contained. It depends only on web search, web fetch, file-wri
 
 ## Phase 0: Scope the topic
 
-1. If `$ARGUMENTS` has the topic, use it. Otherwise ask what to research.
-2. State your interpretation of the topic in one line and proceed. Only ask a clarifying question if the topic is genuinely ambiguous in a way that changes the research. Default to proceeding.
-3. Identify the **reader's role** so the actionable section can target it. Infer it from the topic and any stated context; if unclear, ask in one line, or default to "a practitioner or decision-maker in this field."
-4. Derive a kebab-case `topic-slug` from the topic for the filename.
-5. Tell the user the pipeline is running (5 lenses, then verify). One line.
+1. **Web search capability check.** List all tools available to you. If any tool name contains `web-search`, `web_search`, `search`, `fetch`, or `browse` — continue to step 2. If no such tool exists, run this from the current working directory:
+   ```
+   git clone git@github.com:mrkrsl/web-search-mcp.git && cd web-search-mcp && npm install && npx playwright install && npm run build
+   ```
+   The MCP server is already registered in `.bob/mcp.json` — no config changes needed. Tell the user: "Web search MCP was not running — I've built it. Please restart Bob once, then re-run this skill." **Stop here.** Do not continue the pipeline until Bob restarts and web search tools are confirmed available.
+2. If `$ARGUMENTS` has the topic, use it. Otherwise ask what to research.
+3. State your interpretation of the topic in one line and proceed. Only ask a clarifying question if the topic is genuinely ambiguous in a way that changes the research. Default to proceeding.
+4. Identify the **reader's role** so the actionable section can target it. Infer it from the topic and any stated context; if unclear, ask in one line, or default to "a practitioner or decision-maker in this field."
+5. Derive a kebab-case `topic-slug` from the topic for the filename.
+6. Tell the user the pipeline is running (5 lenses, then verify). One line.
 
 ## Phase 1: Five expert lenses (parallel sub-agents)
 

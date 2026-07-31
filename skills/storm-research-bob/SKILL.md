@@ -4,7 +4,7 @@ description: Autonomous AI coding with spec-driven development for IBM Bob Shell
 argument-hint: "[topic to research]"
 license: MIT
 metadata:
-  version: "2.0"
+  version: "3.0"
   repository: https://github.com/injusticescorpio/storm-research-bob
 ---
 
@@ -20,22 +20,27 @@ Run the full pipeline end to end. Do not shortcut a phase. This is heavier than 
 
 This skill is self-contained. It depends only on web search, web fetch, file-write, and sub-agent capabilities available to the agent, plus `storm-template.html` in this same skill folder. No external scripts, APIs, or paid services are required.
 
-## Phase 0: Scope the topic
+## Phase 0: Web search capability check
 
-1. **Web search capability check.** List all tools available to you. If any tool name contains `web-search`, `web_search`, `search`, `fetch`, or `browse` — continue to step 2. If no such tool exists, run this from the current working directory:
-   ```
-   git clone git@github.com:mrkrsl/web-search-mcp.git && cd web-search-mcp && npm install && npx playwright install && npm run build
-   ```
-   The MCP server is already registered in `.bob/mcp.json` — no config changes needed. Tell the user: "Web search MCP was not running — I've built it. Please restart Bob once, then re-run this skill." **Stop here.** Do not continue the pipeline until Bob restarts and web search tools are confirmed available.
-2. If `$ARGUMENTS` has the topic, use it. Otherwise ask what to research.
-3. State your interpretation of the topic in one line and proceed. Only ask a clarifying question if the topic is genuinely ambiguous in a way that changes the research. Default to proceeding.
-4. Identify the **reader's role** so the actionable section can target it. Infer it from the topic and any stated context; if unclear, ask in one line, or default to "a practitioner or decision-maker in this field."
-5. Derive a kebab-case `topic-slug` from the topic for the filename.
-6. Tell the user the pipeline is running (5 lenses, then verify). One line.
+List all tools currently available to you. If any tool name contains `web-search`, `web_search`, `search`, `fetch`, or `browse` — confirm it in one line ("Web search confirmed: `<tool-name>`") and proceed to Phase 1.
 
-## Phase 1: Five expert lenses (parallel sub-agents)
+If no such tool exists, ALWAYS run this from the current working directory:
+```
+git clone git@github.com:mrkrsl/web-search-mcp.git && cd web-search-mcp && npm install && npx playwright install && npm run build
+```
+The MCP server is already registered in `.bob/mcp.json` — no config changes needed. Tell the user: "Web search MCP was not running — I've built it. Please restart Bob once, then re-run this skill." **Stop here.** Do not continue the pipeline until Bob restarts and web search tools are confirmed available. All later phases depend on real web research; proceeding without it would produce fabricated output.
 
-Spawn **five sub-agents in a single batch** so they run concurrently. Each gets the SAME topic framing plus its own lens. Use these exact prompts, substituting `{TOPIC}` and a one-line `{TOPIC_FRAME}` (your Phase 0 interpretation):
+## Phase 1: Scope the topic
+
+1. If `$ARGUMENTS` has the topic, use it. Otherwise ask what to research.
+2. State your interpretation of the topic in one line and proceed. Only ask a clarifying question if the topic is genuinely ambiguous in a way that changes the research. Default to proceeding.
+3. Identify the **reader's role** so the actionable section can target it. Infer it from the topic and any stated context; if unclear, ask in one line, or default to "a practitioner or decision-maker in this field."
+4. Derive a kebab-case `topic-slug` from the topic for the filename.
+5. Tell the user the pipeline is running (5 lenses, then verify). One line.
+
+## Phase 2: Five expert lenses (parallel sub-agents)
+
+Spawn **five sub-agents in a single batch** so they run concurrently. Each gets the SAME topic framing plus its own lens. Use these exact prompts, substituting `{TOPIC}` and a one-line `{TOPIC_FRAME}` (your Phase 1 interpretation):
 
 **1. THE PRACTITIONER** — `You are THE PRACTITIONER for: {TOPIC} ({TOPIC_FRAME}). You work with this daily. Do real web research (prioritize recent sources, case studies, practitioner threads, operator data). Surface the GAP between what hands-on operators know and what academics/pundits miss, and the practical realities (workflow friction, what actually works, where it breaks) that get ignored. Return EXACTLY: 1) CORE POSITION in 2 sentences. 2) STRONGEST EVIDENCE, 3-5 bullets each with a concrete data point/case/named source + URL. 3) THE ONE THING only a practitioner would say. Cite real sources with URLs. Under 400 words.`
 
@@ -49,7 +54,7 @@ Spawn **five sub-agents in a single batch** so they run concurrently. Each gets 
 
 When all five sub-agents return, post a 2-3 line note in chat: which way they converge, and the sharpest disagreement. Keep the raw briefs out of chat.
 
-## Phase 2: Map the contradictions
+## Phase 3: Map the contradictions
 
 Working only from the five briefs, determine (do this inline, no sub-agents needed):
 
@@ -61,31 +66,31 @@ Working only from the five briefs, determine (do this inline, no sub-agents need
 
 This map is not a separate deliverable. It is the raw material for the report's findings (supports/challenges), hidden connection, 6th-lens box, and frontier question.
 
-## Phase 3: Synthesize the HTML report
+## Phase 4: Synthesize the HTML report
 
 1. Read `storm-template.html` in this skill folder. Clone it; do not rebuild the CSS.
 2. Fill every section. Mapping from the phases:
    - **60-second summary** — decision-maker-grade, nuance not headline. Lead with the settled fact, then the contested interpretation.
-   - **5 key findings, ranked by reliability** — most important things now known, highest reliability first. Each carries a 1-10 confidence score (set in Phase 4) and Supported-by / Challenged-by chips drawn from the contradiction map.
-   - **Hidden connection** — the non-obvious link from Phase 2 that only appears across all five lenses.
-   - **Key assumption / missing 6th lens** — the blind spot from Phase 2, framed as the lens that could change the conclusions.
-   - **Actionable insight** — 3-6 specific moves for the reader's role identified in Phase 0. Specific, not abstract.
-   - **Claim safety guide** — assert / caveat / avoid, populated after Phase 4 verification.
+   - **5 key findings, ranked by reliability** — most important things now known, highest reliability first. Each carries a 1-10 confidence score (set in Phase 5) and Supported-by / Challenged-by chips drawn from the contradiction map.
+   - **Hidden connection** — the non-obvious link from Phase 3 that only appears across all five lenses.
+   - **Key assumption / missing 6th lens** — the blind spot from Phase 3, framed as the lens that could change the conclusions.
+   - **Actionable insight** — 3-6 specific moves for the reader's role identified in Phase 1. Specific, not abstract.
+   - **Claim safety guide** — assert / caveat / avoid, populated after Phase 5 verification.
    - **Frontier question** — the one question that would change everything.
-   - **References** — every citation with a verification-status tag (set in Phase 4).
+   - **References** — every citation with a verification-status tag (set in Phase 5).
 3. Write to `storm-reports/{topic-slug}-briefing.html` (relative to the current working directory; create the folder if needed).
 
-## Phase 4: Adversarial peer review + verification (do not skip)
+## Phase 5: Adversarial peer review + verification (do not skip)
 
 This is what separates Storm Research from a normal report. Run it before delivering.
 
-**4a. Self-review (inline).** Score each of the 5 findings 1-10 for reliability and justify. Identify the weakest link and what would verify it. Run a bias check (which lens dominated the synthesis, what got underweighted). Name the missing 6th perspective. Assign an honest overall grade.
+**5a. Self-review (inline).** Score each of the 5 findings 1-10 for reliability and justify. Identify the weakest link and what would verify it. Run a bias check (which lens dominated the synthesis, what got underweighted). Name the missing 6th perspective. Assign an honest overall grade.
 
-**4b. Verify every citation (parallel sub-agents).** Spawn one sub-agent per distinct citation cluster in a single batch (group related claims; ~4-6 sub-agents). Each sub-agent prompt:
+**5b. Verify every citation (parallel sub-agents).** Spawn one sub-agent per distinct citation cluster in a single batch (group related claims; ~4-6 sub-agents). Each sub-agent prompt:
 
 `Independently verify a citation against its PRIMARY source. Be skeptical; do not trust secondary blog summaries. CLAIM: {claim + cited figure + named source}. Find the actual primary source. Confirm or correct: exact title/authors/venue/year/URL, the real figure or effect size as published, sample/method and any author-stated limits, and peer-review status (published vs preprint). For any contested claim, find the strongest credible counter-source. Return: VERDICT = CONFIRMED / PARTIALLY CONFIRMED (list corrections) / UNVERIFIED / FALSE, then the corrected one-line citation, then 2-4 bullets of specifics with the primary URL. Under 280 words.`
 
-**4c. Apply corrections.** Edit the report:
+**5c. Apply corrections.** Edit the report:
 - Fix any wrong figures, titles, dates, or mischaracterizations.
 - Downgrade confidence scores where evidence turned out thin; demote preprints and contested claims into the "Contested signal" sidebar.
 - Re-attribute single-survey or commissioned stats honestly.
